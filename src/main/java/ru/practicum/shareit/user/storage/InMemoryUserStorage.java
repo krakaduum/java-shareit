@@ -34,10 +34,6 @@ public class InMemoryUserStorage implements UserStorage {
             throw new RuntimeException("Пользователь с электронной почтой " + user.getEmail() + " уже существует");
         }
 
-        if (users.containsKey(user.getId())) {
-            throw new RuntimeException("Пользователь с идентификатором " + user.getId() + " уже существует");
-        }
-
         user.setId(currentId++);
 
         users.put(user.getId(), user);
