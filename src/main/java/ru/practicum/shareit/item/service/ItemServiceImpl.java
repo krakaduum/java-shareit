@@ -13,6 +13,8 @@ import ru.practicum.shareit.user.service.UserService;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -46,7 +48,7 @@ public class ItemServiceImpl implements ItemService {
         Item existingItem = itemStorage.getItem(itemId);
 
         if (existingItem.getOwnerId() != userId) {
-            throw new RuntimeException("Вещь с идентификатором " + itemId + " принадлежит другому пользователю");
+            throw new NoSuchElementException("Вещь с идентификатором " + itemId + " принадлежит другому пользователю");
         }
 
         Item item = ItemMapper.toItem(userId, itemId, existingItem, itemDto);
@@ -60,15 +62,31 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemDto> getItems() {
+    public Collection<ItemDto> getItems(long userId) {
+        Collection<ItemDto> items = getItems();
+        return items.stream().filter(x -> x.getOwnerId() == userId).collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<ItemDto> searchItems(String query) {
+        if (query.isEmpty() || query.isBlank()) {
+            return new ArrayList<>();
+        }
+        Collection<ItemDto> items = getItems();
+        return items.stream().filter(x -> (x.getName().toLowerCase().contains(query.toLowerCase())
+                        || x.getDescription().toLowerCase().contains(query.toLowerCase()))
+                        && x.getAvailable())
+                .collect(Collectors.toList());
+    }
+
+    private Collection<ItemDto> getItems() {
         Collection<Item> items = itemStorage.getItems();
         Collection<ItemDto> itemDtos = new ArrayList<>();
 
-        for (Item Item : items) {
-            itemDtos.add(ItemMapper.toItemDto(Item));
+        for (Item item : items) {
+            itemDtos.add(ItemMapper.toItemDto(item));
         }
 
         return itemDtos;
     }
-
 }

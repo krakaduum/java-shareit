@@ -1,10 +1,9 @@
-package ru.practicum.shareit.item;
+package ru.practicum.shareit.item.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
-import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.Collection;
 
@@ -25,7 +24,7 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemById(@RequestHeader(value = "X-Sharer-User-Id") long userId, @PathVariable long itemId) {
+    public ItemDto getItemById(@PathVariable long itemId) {
         return itemService.getItem(itemId);
     }
 
@@ -42,8 +41,12 @@ public class ItemController {
     }
 
     @GetMapping
-    public Collection<UserDto> getItems() {
-        return getItems();
+    public Collection<ItemDto> getItems(@RequestHeader(value = "X-Sharer-User-Id") long userId) {
+        return itemService.getItems(userId);
     }
 
+    @GetMapping("/search")
+    public Collection<ItemDto> searchItems(@RequestParam String text) {
+        return itemService.searchItems(text);
+    }
 }
