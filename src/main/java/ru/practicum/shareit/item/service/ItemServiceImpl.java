@@ -50,11 +50,11 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto getItem(long id) {
-        Optional<Item> item = itemRepository.findById(id);
+    public ItemDto getItem(long itemId) {
+        Optional<Item> item = itemRepository.findById(itemId);
 
         if (item.isEmpty()) {
-            throw new NoSuchElementException("Вещи с идентификатором " + id + " не существует");
+            throw new NoSuchElementException("Вещи с идентификатором " + itemId + " не существует");
         }
 
         return ItemMapper.toItemDto(item.get());
@@ -100,11 +100,11 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public void removeItem(long id) {
-        if (itemRepository.existsById(id)) {
-            itemRepository.deleteById(id);
+    public void removeItem(long itemId) {
+        if (itemRepository.existsById(itemId)) {
+            itemRepository.deleteById(itemId);
         } else {
-            throw new NoSuchElementException("Вещи с идентификатором " + id + " не существует");
+            throw new NoSuchElementException("Вещи с идентификатором " + itemId + " не существует");
         }
     }
 

@@ -24,7 +24,7 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemById(@PathVariable long itemId) {
+    public ItemDto getItem(@PathVariable long itemId) {
         return itemService.getItem(itemId);
     }
 
