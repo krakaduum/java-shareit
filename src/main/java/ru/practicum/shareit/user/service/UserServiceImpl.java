@@ -1,10 +1,7 @@
 package ru.practicum.shareit.user.service;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.exception.NullOrEmptyEmailException;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
@@ -17,16 +14,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final ItemRepository itemRepository;
     private final Validator validator;
 
-    public UserServiceImpl(UserRepository userRepository, ItemRepository itemRepository) {
+    public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.itemRepository = itemRepository;
 
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         this.validator = factory.getValidator();
@@ -34,17 +28,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto addUser(UserDto userDto) {
-        if (userDto.getEmail() == null || userDto.getEmail().trim().isEmpty()) {
-            throw new NullOrEmptyEmailException("Пользователь должен иметь заполненный email");
-        }
-
         User user = UserMapper.toUser(userDto);
         user.setId(null);
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         for (ConstraintViolation<User> violation : violations) {
-            log.error(violation.getMessage());
-            throw new ValidationException("Валидация не пройдена");
+            throw new ValidationException("Валидация не пройдена: " + violation.getMessage());
         }
 
         user = userRepository.save(user);
@@ -81,8 +70,7 @@ public class UserServiceImpl implements UserService {
 
         Set<ConstraintViolation<User>> violations = validator.validate(existingUser.get());
         for (ConstraintViolation<User> violation : violations) {
-            log.error(violation.getMessage());
-            throw new ValidationException("Валидация не пройдена");
+            throw new ValidationException("Валидация не пройдена: " + violation.getMessage());
         }
 
         User updatedUser = userRepository.save(existingUser.get());
@@ -92,12 +80,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public void removeUser(long id) {
         if (userRepository.existsById(id)) {
-//            try {
-//                itemRepository.deleteAllByOwner(userRepository.getById(id));
-//            } catch (Exception e) {
-//                throw e;
-//            }
-
             userRepository.deleteById(id);
         } else {
             throw new NoSuchElementException("Пользователя с идентификатором " + id + " не существует");

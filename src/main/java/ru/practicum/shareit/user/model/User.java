@@ -18,23 +18,18 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
+    @Column(name = "id")
     Long id;
 
     @NotBlank
     @NotNull
-    @Column(name = "name", nullable = false, length = 255)
+    @Column(name = "name", length = 255)
     String name;
 
     @Email
     @NotBlank
     @NotNull
-    @Column(name = "email", nullable = false, length = 255)
+    @Column(name = "email", length = 255)
     String email;
-
-    public User(String name, String email) {
-        this.name = name;
-        this.email = email;
-    }
 
 }
