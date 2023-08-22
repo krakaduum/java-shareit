@@ -42,7 +42,7 @@ public class ItemController {
 
     @GetMapping
     public Collection<ItemDto> getItems(@RequestHeader(value = "X-Sharer-User-Id") long userId) {
-        return itemService.getItems(userId);
+        return itemService.getItemsByOwnerId(userId);
     }
 
     @GetMapping("/search")

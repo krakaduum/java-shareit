@@ -1,70 +1,119 @@
 package ru.practicum.shareit.item.service;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.storage.ItemStorage;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.NoSuchElementException;
+import javax.validation.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class ItemServiceImpl implements ItemService {
 
-    @Qualifier("inMemoryItemStorage")
-    private final ItemStorage itemStorage;
-    private final UserService userService;
+    private final ItemRepository itemRepository;
+    private final UserRepository userRepository;
+    private final Validator validator;
 
-    @Autowired
-    public ItemServiceImpl(ItemStorage itemStorage, UserService userService) {
-        this.itemStorage = itemStorage;
-        this.userService = userService;
+    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository) {
+        this.itemRepository = itemRepository;
+        this.userRepository = userRepository;
+
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        this.validator = factory.getValidator();
     }
 
     @Override
-    public ItemDto addItem(long userId, ItemDto itemDto) {
-        UserDto userDto = userService.getUser(userId);
+    public ItemDto addItem(long ownerId, ItemDto itemDto) {
+        Item item = ItemMapper.toItem(itemDto);
+        item.setId(null);
 
-        Item item = ItemMapper.toItem(userDto.getId(), itemDto);
-        return ItemMapper.toItemDto(itemStorage.addItem(item));
+        Set<ConstraintViolation<Item>> violations = validator.validate(item);
+        for (ConstraintViolation<Item> violation : violations) {
+            throw new ValidationException("Валидация не пройдена: " + violation.getMessage());
+        }
+
+        Optional<User> owner = userRepository.findById(ownerId);
+
+        if (owner.isEmpty()) {
+            throw new NoSuchElementException("Пользователя с идентификатором " + ownerId + " не существует");
+        }
+
+        item.setOwner(owner.get());
+
+        item = itemRepository.save(item);
+        return ItemMapper.toItemDto(item);
     }
 
     @Override
     public ItemDto getItem(long id) {
-        return ItemMapper.toItemDto(itemStorage.getItem(id));
+        Optional<Item> item = itemRepository.findById(id);
+
+        if (item.isEmpty()) {
+            throw new NoSuchElementException("Вещи с идентификатором " + id + " не существует");
+        }
+
+        return ItemMapper.toItemDto(item.get());
     }
 
     @Override
-    public ItemDto updateItem(long userId, long itemId, ItemDto itemDto) {
-        Item existingItem = itemStorage.getItem(itemId);
+    public ItemDto updateItem(long ownerId, long itemId, ItemDto itemDto) {
+        Optional<Item> existingItem = itemRepository.findById(itemId);
 
-        if (existingItem.getOwnerId() != userId) {
+        if (existingItem.isEmpty()) {
+            throw new NoSuchElementException("Вещи с идентификатором " + itemId + " не существует");
+        }
+
+        Optional<User> owner = userRepository.findById(ownerId);
+
+        if (owner.isEmpty()) {
+            throw new NoSuchElementException("Пользователя с идентификатором " + ownerId + " не существует");
+        }
+
+        if (existingItem.get().getOwner().getId() != owner.get().getId()) {
             throw new NoSuchElementException("Вещь с идентификатором " + itemId + " принадлежит другому пользователю");
         }
 
-        Item item = ItemMapper.toItem(userId, itemId, existingItem, itemDto);
+        if (itemDto.getName() != null && !itemDto.getName().trim().isEmpty()) {
+            existingItem.get().setName(itemDto.getName());
+        }
 
-        return ItemMapper.toItemDto(itemStorage.updateItem(item));
+        if (itemDto.getDescription() != null && !itemDto.getDescription().trim().isEmpty()) {
+            existingItem.get().setDescription(itemDto.getDescription());
+        }
+
+        if (itemDto.getAvailable() != null) {
+            existingItem.get().setAvailable(itemDto.getAvailable());
+        }
+
+        Set<ConstraintViolation<Item>> violations = validator.validate(existingItem.get());
+        for (ConstraintViolation<Item> violation : violations) {
+            throw new ValidationException("Валидация не пройдена: " + violation.getMessage());
+        }
+
+        Item updatedItem = itemRepository.save(existingItem.get());
+        return ItemMapper.toItemDto(updatedItem);
     }
 
     @Override
     public void removeItem(long id) {
-        itemStorage.removeItem(id);
+        if (itemRepository.existsById(id)) {
+            itemRepository.deleteById(id);
+        } else {
+            throw new NoSuchElementException("Вещи с идентификатором " + id + " не существует");
+        }
     }
 
     @Override
-    public Collection<ItemDto> getItems(long userId) {
-        Collection<ItemDto> items = getItems();
-        return items.stream().filter(x -> x.getOwnerId() == userId).collect(Collectors.toList());
+    public Collection<ItemDto> getItemsByOwnerId(long ownerId) {
+        return getItems()
+                .stream()
+                .filter(x -> x.getOwnerId() == ownerId)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -80,13 +129,11 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Collection<ItemDto> getItems() {
-        Collection<Item> items = itemStorage.getItems();
-        Collection<ItemDto> itemDtos = new ArrayList<>();
-
-        for (Item item : items) {
-            itemDtos.add(ItemMapper.toItemDto(item));
-        }
-
-        return itemDtos;
+        return itemRepository
+                .findAll()
+                .stream()
+                .map(ItemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
+
 }
