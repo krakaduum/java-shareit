@@ -187,7 +187,7 @@ public class ItemServiceImpl implements ItemService {
         }
 
         List<Booking> authorBookings = bookingRepository
-                .findAllPastBookingsByBookerIdAndItemIdOrderByStartDesc(authorId, itemId);
+                .findAllPastBookingsByBookerIdAndItemIdOrderByIdAsc(authorId, itemId);
         if (authorBookings.isEmpty()) {
             throw new InvalidAuthorException("Отзыв может оставить только человек, который брал вещь в аренду");
         }
@@ -209,7 +209,7 @@ public class ItemServiceImpl implements ItemService {
         BookingShortDto lastBookingShortDto = null;
 
         List<Booking> lastBookings = bookingRepository
-                .findAllCurrentOrPastBookingsByItemIdOrderByEndAsc(item.getId());
+                .findAllCurrentOrPastBookingsByItemIdOrderByStartAsc(item.getId());
 
         if (!lastBookings.isEmpty()) {
             Booking lastBooking = lastBookings.get(lastBookings.size() - 1);

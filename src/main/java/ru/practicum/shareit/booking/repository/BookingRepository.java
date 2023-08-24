@@ -11,7 +11,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findAllByBookerIdOrderByStartDesc(Long bookerId);
 
-    List<Booking> findAllByBookerIdAndStatusOrderByStartDesc(Long bookerId, Status status);
+    List<Booking> findAllByBookerIdAndStatusOrderByIdAsc(Long bookerId, Status status);
 
     @Query("SELECT b " +
             "FROM Booking as b " +
@@ -34,15 +34,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT b " +
             "FROM Booking b " +
             "WHERE b.booker.id = ?1 " +
-            "AND b.status = 'APPROVED' " +
+            "AND b.status IN ('REJECTED', 'APPROVED') " +
             "AND (b.start < CURRENT_TIMESTAMP AND b.end > CURRENT_TIMESTAMP) " +
-            "ORDER BY b.start DESC"
+            "ORDER BY b.id ASC"
     )
-    List<Booking> findAllCurrentBookingsByBookerIdOrderByStartDesc(Long bookerId);
+    List<Booking> findAllCurrentBookingsByBookerIdOrderByIdAsc(Long bookerId);
 
     List<Booking> findAllByItemOwnerIdOrderByStartDesc(Long ownerId);
 
-    List<Booking> findAllByItemOwnerIdAndStatusOrderByStartDesc(Long ownerId, Status status);
+    List<Booking> findAllByItemOwnerIdAndStatusOrderByIdAsc(Long ownerId, Status status);
 
     @Query("SELECT b " +
             "FROM Booking as b " +
@@ -65,20 +65,20 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT b " +
             "FROM Booking b " +
             "WHERE b.item.owner.id = ?1 " +
-            "AND b.status = 'APPROVED' " +
+            "AND b.status IN ('REJECTED', 'APPROVED') " +
             "AND (b.start < CURRENT_TIMESTAMP AND b.end > CURRENT_TIMESTAMP) " +
-            "ORDER BY b.start DESC"
+            "ORDER BY b.id ASC"
     )
-    List<Booking> findAllCurrentBookingsByItemOwnerIdOrderByStartDesc(Long ownerId);
+    List<Booking> findAllCurrentBookingsByItemOwnerIdOrderByIdAsc(Long ownerId);
 
     @Query("SELECT b " +
             "FROM Booking b " +
             "WHERE b.item.id = ?1 " +
             "AND b.status = 'APPROVED' " +
             "AND b.start < CURRENT_TIMESTAMP " +
-            "ORDER BY b.end ASC"
+            "ORDER BY b.start ASC"
     )
-    List<Booking> findAllCurrentOrPastBookingsByItemIdOrderByEndAsc(Long itemId);
+    List<Booking> findAllCurrentOrPastBookingsByItemIdOrderByStartAsc(Long itemId);
 
     @Query("SELECT b " +
             "FROM Booking as b " +
@@ -95,8 +95,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "AND b.item.id = ?2 " +
             "AND b.status = 'APPROVED' " +
             "AND b.end < CURRENT_TIMESTAMP " +
-            "ORDER BY b.start DESC"
+            "ORDER BY b.id ASC"
     )
-    List<Booking> findAllPastBookingsByBookerIdAndItemIdOrderByStartDesc(Long bookerId, Long itemId);
+    List<Booking> findAllPastBookingsByBookerIdAndItemIdOrderByIdAsc(Long bookerId, Long itemId);
 
 }

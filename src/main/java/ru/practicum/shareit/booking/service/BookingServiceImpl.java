@@ -150,7 +150,7 @@ public class BookingServiceImpl implements BookingService {
         switch (parseState(state)) {
             case CURRENT:
                 return bookingRepository
-                        .findAllCurrentBookingsByBookerIdOrderByStartDesc(bookerId)
+                        .findAllCurrentBookingsByBookerIdOrderByIdAsc(bookerId)
                         .stream()
                         .map(BookingMapper::toBookingDto)
                         .collect(Collectors.toList());
@@ -171,14 +171,14 @@ public class BookingServiceImpl implements BookingService {
 
             case WAITING:
                 return bookingRepository
-                        .findAllByBookerIdAndStatusOrderByStartDesc(bookerId, Status.WAITING)
+                        .findAllByBookerIdAndStatusOrderByIdAsc(bookerId, Status.WAITING)
                         .stream()
                         .map(BookingMapper::toBookingDto)
                         .collect(Collectors.toList());
 
             case REJECTED:
                 return bookingRepository
-                        .findAllByBookerIdAndStatusOrderByStartDesc(bookerId, Status.REJECTED)
+                        .findAllByBookerIdAndStatusOrderByIdAsc(bookerId, Status.REJECTED)
                         .stream()
                         .map(BookingMapper::toBookingDto)
                         .collect(Collectors.toList());
@@ -203,7 +203,7 @@ public class BookingServiceImpl implements BookingService {
         switch (parseState(state)) {
             case CURRENT:
                 return bookingRepository
-                        .findAllCurrentBookingsByItemOwnerIdOrderByStartDesc(ownerId)
+                        .findAllCurrentBookingsByItemOwnerIdOrderByIdAsc(ownerId)
                         .stream()
                         .map(BookingMapper::toBookingDto)
                         .collect(Collectors.toList());
@@ -224,14 +224,14 @@ public class BookingServiceImpl implements BookingService {
 
             case WAITING:
                 return bookingRepository
-                        .findAllByItemOwnerIdAndStatusOrderByStartDesc(ownerId, Status.WAITING)
+                        .findAllByItemOwnerIdAndStatusOrderByIdAsc(ownerId, Status.WAITING)
                         .stream()
                         .map(BookingMapper::toBookingDto)
                         .collect(Collectors.toList());
 
             case REJECTED:
                 return bookingRepository
-                        .findAllByItemOwnerIdAndStatusOrderByStartDesc(ownerId, Status.REJECTED)
+                        .findAllByItemOwnerIdAndStatusOrderByIdAsc(ownerId, Status.REJECTED)
                         .stream()
                         .map(BookingMapper::toBookingDto)
                         .collect(Collectors.toList());
