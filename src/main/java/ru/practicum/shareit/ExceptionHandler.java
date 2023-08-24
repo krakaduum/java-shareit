@@ -6,6 +6,7 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.shareit.booking.exception.*;
+import ru.practicum.shareit.item.exception.InvalidAuthorException;
 
 import javax.validation.ValidationException;
 import java.util.NoSuchElementException;
@@ -45,7 +46,7 @@ public class ExceptionHandler {
 
     @org.springframework.web.bind.annotation.ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleUnavailableActionException(final UnavailableActionException e) {
+    public ErrorResponse handleInvalidBookerException(final InvalidBookerException e) {
         return new ErrorResponse(e.getMessage());
     }
 
@@ -64,6 +65,12 @@ public class ExceptionHandler {
     @org.springframework.web.bind.annotation.ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleInvalidStatusException(final InvalidStatusException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidAuthorException(final InvalidAuthorException e) {
         return new ErrorResponse(e.getMessage());
     }
 

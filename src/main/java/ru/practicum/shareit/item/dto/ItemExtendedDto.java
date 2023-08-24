@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 
+import java.util.Collection;
+
 @AllArgsConstructor
 @Getter
 public class ItemExtendedDto {
@@ -21,5 +23,7 @@ public class ItemExtendedDto {
     BookingShortDto lastBooking;
 
     BookingShortDto nextBooking;
+
+    Collection<CommentDto> comments;
 
 }

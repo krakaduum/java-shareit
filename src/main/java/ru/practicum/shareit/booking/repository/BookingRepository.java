@@ -76,9 +76,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "WHERE b.item.id = ?1 " +
             "AND b.status = 'APPROVED' " +
             "AND b.start < CURRENT_TIMESTAMP " +
-            "ORDER BY b.start DESC"
+            "ORDER BY b.end ASC"
     )
-    List<Booking> findAllCurrentOrPastBookingsByItemIdOrderByStartDesc(Long itemId);
+    List<Booking> findAllCurrentOrPastBookingsByItemIdOrderByEndAsc(Long itemId);
 
     @Query("SELECT b " +
             "FROM Booking as b " +
@@ -88,5 +88,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "ORDER BY b.start DESC"
     )
     List<Booking> findAllFutureBookingsByItemIdOrderByStartDesc(Long itemId);
+
+    @Query("SELECT b " +
+            "FROM Booking b " +
+            "WHERE b.booker.id = ?1 " +
+            "AND b.item.id = ?2 " +
+            "AND b.status = 'APPROVED' " +
+            "AND b.end < CURRENT_TIMESTAMP " +
+            "ORDER BY b.start DESC"
+    )
+    List<Booking> findAllPastBookingsByBookerIdAndItemIdOrderByStartDesc(Long bookerId, Long itemId);
 
 }

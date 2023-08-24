@@ -6,15 +6,22 @@ import ru.practicum.shareit.booking.exception.AccessDeniedException;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentRequestBody;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemExtendedDto;
+import ru.practicum.shareit.item.exception.InvalidAuthorException;
+import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.validation.*;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,14 +31,17 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
     private final Validator validator;
 
     public ItemServiceImpl(ItemRepository itemRepository,
                            UserRepository userRepository,
-                           BookingRepository bookingRepository) {
+                           BookingRepository bookingRepository,
+                           CommentRepository commentRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
 
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         this.validator = factory.getValidator();
@@ -74,7 +84,9 @@ public class ItemServiceImpl implements ItemService {
             nextBooking = getNextBooking(item.get());
         }
 
-        return ItemMapper.toItemExtendedDto(item.get(), lastBooking, nextBooking);
+        Collection<CommentDto> comments = getComments(item.get());
+
+        return ItemMapper.toItemExtendedDto(item.get(), lastBooking, nextBooking, comments);
     }
 
     @Override
@@ -136,7 +148,10 @@ public class ItemServiceImpl implements ItemService {
         return itemRepository
                 .findAllByOwnerIdOrderByIdAsc(ownerId)
                 .stream()
-                .map(item -> ItemMapper.toItemExtendedDto(item, getLastBooking(item), getNextBooking(item)))
+                .map(item -> ItemMapper.toItemExtendedDto(item,
+                        getLastBooking(item),
+                        getNextBooking(item),
+                        getComments(item)))
                 .collect(Collectors.toList());
     }
 
@@ -153,11 +168,48 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public CommentDto addComment(long authorId, long itemId, CommentRequestBody commentRequestBody) {
+        Comment comment = new Comment();
+        comment.setId(null);
+        comment.setCreated(LocalDateTime.now());
+
+        Optional<User> author = userRepository.findById(authorId);
+
+        if (author.isEmpty()) {
+            throw new NoSuchElementException("Пользователя с идентификатором " + authorId + " не существует");
+        }
+
+        Optional<Item> item = itemRepository.findById(itemId);
+
+        if (item.isEmpty()) {
+            throw new NoSuchElementException("Вещи с идентификатором " + itemId + " не существует");
+        }
+
+        List<Booking> authorBookings = bookingRepository
+                .findAllPastBookingsByBookerIdAndItemIdOrderByStartDesc(authorId, itemId);
+        if (authorBookings.isEmpty()) {
+            throw new InvalidAuthorException("Отзыв может оставить только человек, который брал вещь в аренду");
+        }
+
+        comment.setText(commentRequestBody.getText());
+        comment.setAuthor(author.get());
+        comment.setItem(item.get());
+
+        Set<ConstraintViolation<Comment>> violations = validator.validate(comment);
+        for (ConstraintViolation<Comment> violation : violations) {
+            throw new ValidationException("Валидация не пройдена: " + violation.getMessage());
+        }
+
+        comment = commentRepository.save(comment);
+        return CommentMapper.toCommentDto(comment);
+    }
+
     private BookingShortDto getLastBooking(Item item) {
         BookingShortDto lastBookingShortDto = null;
 
         List<Booking> lastBookings = bookingRepository
-                .findAllCurrentOrPastBookingsByItemIdOrderByStartDesc(item.getId());
+                .findAllCurrentOrPastBookingsByItemIdOrderByEndAsc(item.getId());
 
         if (!lastBookings.isEmpty()) {
             Booking lastBooking = lastBookings.get(lastBookings.size() - 1);
@@ -179,6 +231,14 @@ public class ItemServiceImpl implements ItemService {
         }
 
         return nextBookingShortDto;
+    }
+
+    private Collection<CommentDto> getComments(Item item) {
+        return commentRepository
+                .findAllByItemIdOrderByIdAsc(item.getId())
+                .stream()
+                .map(CommentMapper::toCommentDto)
+                .collect(Collectors.toList());
     }
 
 }

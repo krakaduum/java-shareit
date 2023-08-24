@@ -47,7 +47,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         if (item.get().getOwner().getId() == bookerId) {
-            throw new UnavailableActionException("Владелец не может бронировать свою вещь");
+            throw new InvalidBookerException("Владелец не может бронировать свою вещь");
         }
 
         booking.setItem(item.get());
