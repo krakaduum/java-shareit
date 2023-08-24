@@ -5,10 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.shareit.booking.exception.AccessDeniedException;
-import ru.practicum.shareit.booking.exception.InvalidDatesException;
-import ru.practicum.shareit.booking.exception.InvalidStatusException;
-import ru.practicum.shareit.booking.exception.UnavailableItemException;
+import ru.practicum.shareit.booking.exception.*;
 
 import javax.validation.ValidationException;
 import java.util.NoSuchElementException;
@@ -47,6 +44,12 @@ public class ExceptionHandler {
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleUnavailableActionException(final UnavailableActionException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleInvalidDatesException(final InvalidDatesException e) {
         return new ErrorResponse(e.getMessage());
@@ -61,6 +64,12 @@ public class ExceptionHandler {
     @org.springframework.web.bind.annotation.ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleInvalidStatusException(final InvalidStatusException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleIllegalArgumentException(final IllegalArgumentException e) {
         return new ErrorResponse(e.getMessage());
     }
 
