@@ -1,7 +1,13 @@
 package ru.practicum.shareit.item.service;
 
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.dto.BookingShortDto;
+import ru.practicum.shareit.booking.exception.AccessDeniedException;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemExtendedDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -17,11 +23,15 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
     private final Validator validator;
 
-    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository) {
+    public ItemServiceImpl(ItemRepository itemRepository,
+                           UserRepository userRepository,
+                           BookingRepository bookingRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
 
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         this.validator = factory.getValidator();
@@ -50,14 +60,21 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto getItem(long itemId) {
+    public ItemExtendedDto getItem(long userId, long itemId) {
         Optional<Item> item = itemRepository.findById(itemId);
 
         if (item.isEmpty()) {
             throw new NoSuchElementException("Вещи с идентификатором " + itemId + " не существует");
         }
 
-        return ItemMapper.toItemDto(item.get());
+        BookingShortDto lastBooking = null;
+        BookingShortDto nextBooking = null;
+        if (item.get().getOwner().getId() == userId) {
+            lastBooking = getLastBooking(item.get());
+            nextBooking = getNextBooking(item.get());
+        }
+
+        return ItemMapper.toItemExtendedDto(item.get(), lastBooking, nextBooking);
     }
 
     @Override
@@ -74,7 +91,7 @@ public class ItemServiceImpl implements ItemService {
             throw new NoSuchElementException("Пользователя с идентификатором " + ownerId + " не существует");
         }
 
-        if (existingItem.get().getOwner().getId() != owner.get().getId()) {
+        if (!Objects.equals(existingItem.get().getOwner().getId(), owner.get().getId())) {
             throw new NoSuchElementException("Вещь с идентификатором " + itemId + " принадлежит другому пользователю");
         }
 
@@ -100,19 +117,26 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public void removeItem(long itemId) {
-        if (itemRepository.existsById(itemId)) {
-            itemRepository.deleteById(itemId);
-        } else {
+    public void removeItem(long ownerId, long itemId) {
+        Optional<Item> item = itemRepository.findById(itemId);
+
+        if (item.isEmpty()) {
             throw new NoSuchElementException("Вещи с идентификатором " + itemId + " не существует");
         }
+
+        if (item.get().getOwner().getId() != ownerId) {
+            throw new AccessDeniedException("Удалить вещь может только её владелец");
+        }
+
+        itemRepository.deleteById(itemId);
     }
 
     @Override
-    public Collection<ItemDto> getItemsByOwnerId(long ownerId) {
-        return getItems()
+    public Collection<ItemExtendedDto> getItemsByOwnerId(long ownerId) {
+        return itemRepository
+                .findAllByOwnerIdOrderByIdAsc(ownerId)
                 .stream()
-                .filter(x -> x.getOwnerId() == ownerId)
+                .map(item -> ItemMapper.toItemExtendedDto(item, getLastBooking(item), getNextBooking(item)))
                 .collect(Collectors.toList());
     }
 
@@ -121,19 +145,40 @@ public class ItemServiceImpl implements ItemService {
         if (query.isEmpty() || query.isBlank()) {
             return new ArrayList<>();
         }
-        Collection<ItemDto> items = getItems();
-        return items.stream().filter(x -> (x.getName().toLowerCase().contains(query.toLowerCase())
-                        || x.getDescription().toLowerCase().contains(query.toLowerCase()))
-                        && x.getAvailable())
-                .collect(Collectors.toList());
-    }
 
-    private Collection<ItemDto> getItems() {
         return itemRepository
-                .findAll()
+                .findAllAvailableItemsByNameOrDescription(query)
                 .stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
+    }
+
+    private BookingShortDto getLastBooking(Item item) {
+        BookingShortDto lastBookingShortDto = null;
+
+        List<Booking> lastBookings = bookingRepository
+                .findAllCurrentOrPastBookingsByItemIdOrderByStartDesc(item.getId());
+
+        if (!lastBookings.isEmpty()) {
+            Booking lastBooking = lastBookings.get(lastBookings.size() - 1);
+            lastBookingShortDto = BookingMapper.toBookingShortDto(lastBooking);
+        }
+
+        return lastBookingShortDto;
+    }
+
+    private BookingShortDto getNextBooking(Item item) {
+        BookingShortDto nextBookingShortDto = null;
+
+        List<Booking> nextBookings = bookingRepository
+                .findAllFutureBookingsByItemIdOrderByStartDesc(item.getId());
+
+        if (!nextBookings.isEmpty()) {
+            Booking nextBooking = nextBookings.get(nextBookings.size() - 1);
+            nextBookingShortDto = BookingMapper.toBookingShortDto(nextBooking);
+        }
+
+        return nextBookingShortDto;
     }
 
 }

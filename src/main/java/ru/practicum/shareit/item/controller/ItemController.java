@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemExtendedDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.Collection;
@@ -24,8 +25,9 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItem(@PathVariable long itemId) {
-        return itemService.getItem(itemId);
+    public ItemExtendedDto getItem(@RequestHeader(value = "X-Sharer-User-Id") long userId,
+                                   @PathVariable long itemId) {
+        return itemService.getItem(userId, itemId);
     }
 
     @PatchMapping("/{itemId}")
@@ -36,12 +38,13 @@ public class ItemController {
     }
 
     @DeleteMapping("/{itemId}")
-    public void removeItem(@PathVariable long itemId) {
-        itemService.removeItem(itemId);
+    public void removeItem(@RequestHeader(value = "X-Sharer-User-Id") long userId,
+                           @PathVariable long itemId) {
+        itemService.removeItem(userId, itemId);
     }
 
     @GetMapping
-    public Collection<ItemDto> getItems(@RequestHeader(value = "X-Sharer-User-Id") long userId) {
+    public Collection<ItemExtendedDto> getItems(@RequestHeader(value = "X-Sharer-User-Id") long userId) {
         return itemService.getItemsByOwnerId(userId);
     }
 
@@ -49,4 +52,5 @@ public class ItemController {
     public Collection<ItemDto> searchItems(@RequestParam String text) {
         return itemService.searchItems(text);
     }
+
 }
