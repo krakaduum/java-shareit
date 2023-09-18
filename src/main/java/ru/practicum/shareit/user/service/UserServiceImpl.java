@@ -1,63 +1,98 @@
 package ru.practicum.shareit.user.service;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.repository.UserRepository;
 
-import java.util.ArrayList;
+import javax.validation.*;
 import java.util.Collection;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class UserServiceImpl implements UserService {
 
-    @Qualifier("inMemoryUserStorage")
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
+    private final Validator validator;
 
-    @Autowired
-    public UserServiceImpl(UserStorage userStorage) {
-        this.userStorage = userStorage;
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        this.validator = factory.getValidator();
     }
 
     @Override
     public UserDto addUser(UserDto userDto) {
         User user = UserMapper.toUser(userDto);
-        return UserMapper.toUserDto(userStorage.addUser(user));
+        user.setId(null);
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        for (ConstraintViolation<User> violation : violations) {
+            throw new ValidationException("Валидация не пройдена: " + violation.getMessage());
+        }
+
+        user = userRepository.save(user);
+        return UserMapper.toUserDto(user);
+
     }
 
     @Override
     public UserDto getUser(long id) {
-        return UserMapper.toUserDto(userStorage.getUser(id));
+        Optional<User> user = userRepository.findById(id);
+
+        if (user.isEmpty()) {
+            throw new NoSuchElementException("Пользователя с идентификатором " + id + " не существует");
+        }
+
+        return UserMapper.toUserDto(user.get());
     }
 
     @Override
     public UserDto updateUser(long id, UserDto userDto) {
-        User existingUser = userStorage.getUser(id);
-        User user = UserMapper.toUser(id, existingUser, userDto);
+        Optional<User> existingUser = userRepository.findById(id);
 
-        return UserMapper.toUserDto(userStorage.updateUser(user));
+        if (existingUser.isEmpty()) {
+            throw new NoSuchElementException("Пользователя с идентификатором " + id + " не существует");
+        }
+
+        if (userDto.getName() != null && !userDto.getName().trim().isEmpty()) {
+            existingUser.get().setName(userDto.getName());
+        }
+
+        if (userDto.getEmail() != null && !userDto.getEmail().trim().isEmpty()) {
+            existingUser.get().setEmail(userDto.getEmail());
+        }
+
+        Set<ConstraintViolation<User>> violations = validator.validate(existingUser.get());
+        for (ConstraintViolation<User> violation : violations) {
+            throw new ValidationException("Валидация не пройдена: " + violation.getMessage());
+        }
+
+        User updatedUser = userRepository.save(existingUser.get());
+        return UserMapper.toUserDto(updatedUser);
     }
 
     @Override
     public void removeUser(long id) {
-        userStorage.removeUser(id);
+        if (userRepository.existsById(id)) {
+            userRepository.deleteById(id);
+        } else {
+            throw new NoSuchElementException("Пользователя с идентификатором " + id + " не существует");
+        }
     }
 
     @Override
     public Collection<UserDto> getUsers() {
-        Collection<User> users = userStorage.getUsers();
-        Collection<UserDto> userDtos = new ArrayList<>();
-
-        for (User user : users) {
-            userDtos.add(UserMapper.toUserDto(user));
-        }
-
-        return userDtos;
+        return userRepository
+                .findAll()
+                .stream()
+                .map(UserMapper::toUserDto)
+                .collect(Collectors.toList());
     }
 
 }
