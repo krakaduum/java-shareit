@@ -18,9 +18,9 @@ public interface ItemService {
 
     void removeItem(long ownerId, long itemId);
 
-    Collection<ItemExtendedDto> getItemsByOwnerId(long ownerId);
+    Collection<ItemExtendedDto> getItemsByOwnerId(long ownerId, Integer from, Integer size);
 
-    Collection<ItemDto> searchItems(String query);
+    Collection<ItemDto> searchItems(String query, Integer from, Integer size);
 
     CommentDto addComment(long authorId, long itemId, CommentRequestBody commentRequestBody);
 
