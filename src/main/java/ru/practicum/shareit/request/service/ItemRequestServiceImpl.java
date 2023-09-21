@@ -67,7 +67,6 @@ public class ItemRequestServiceImpl implements ItemRequestService {
             throw new NoSuchElementException("Пользователя с идентификатором " + userId + " не существует");
         }
 
-
         Optional<ItemRequest> itemRequest = itemRequestRepository.findById(requestId);
 
         if (itemRequest.isEmpty()) {

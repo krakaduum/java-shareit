@@ -51,7 +51,7 @@ public class ItemRequestControllerTest {
     MockMvc mvc;
 
     @Test
-    public void addItemRequestTest() throws Exception {
+    public void addItemRequest_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -73,7 +73,7 @@ public class ItemRequestControllerTest {
     }
 
     @Test
-    public void getItemRequestTest() throws Exception {
+    public void getItemRequest_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -91,7 +91,7 @@ public class ItemRequestControllerTest {
     }
 
     @Test
-    public void getItemRequestsByRequesterIdTest() throws Exception {
+    public void getItemRequestsByRequesterId_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -109,7 +109,7 @@ public class ItemRequestControllerTest {
     }
 
     @Test
-    public void getItemRequestsTest() throws Exception {
+    public void getItemRequests_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");

@@ -26,7 +26,7 @@ public class ItemRequestServiceIntegrationTest {
     private final UserService userService;
 
     @Test
-    public void addItemRequestTest() {
+    public void addItemRequest_withValidData_returnsItemRequestDto() {
         // Arrange
         var itemRequestRequestBody = new ItemRequestRequestBody("Description");
         var requesterDto = new UserDto(2L,

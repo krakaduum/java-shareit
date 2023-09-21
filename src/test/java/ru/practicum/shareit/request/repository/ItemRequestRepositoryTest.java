@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @AutoConfigureTestDatabase
@@ -29,7 +30,7 @@ public class ItemRequestRepositoryTest {
     private final UserRepository userRepository;
 
     @Test
-    public void findAllByRequesterIdOrderByIdAsc() {
+    public void findAllByRequesterIdOrderByIdAsc_withValidSearchParams_returnsItemRequestCollection() {
         // Arrange
         var requester = new User(1L,
                 "Requester Name",
@@ -41,17 +42,20 @@ public class ItemRequestRepositoryTest {
 
         // Act
         var requests = itemRequestRepository.findAllByRequesterIdOrderByIdAsc(requester.getId());
-        var firstRequest = requests.stream().findFirst().get();
+
 
         // Assert
         assertEquals(1, requests.size());
+        assertTrue(requests.stream().findFirst().isPresent());
+
+        var firstRequest = requests.stream().findFirst().get();
         assertThat(firstRequest.getId(), notNullValue());
         assertEquals(itemRequest.getDescription(), firstRequest.getDescription());
         assertEquals(itemRequest.getRequester().getId(), firstRequest.getRequester().getId());
     }
 
     @Test
-    public void findAllByRequesterIdNotOrderByIdAscAsc() {
+    public void findAllByRequesterIdNotOrderByIdAscAsc_withValidSearchParams_returnsItemRequestCollection() {
         // Arrange
         var requester1 = new User(1L,
                 "Requester1 Name",
@@ -70,10 +74,12 @@ public class ItemRequestRepositoryTest {
         // Act
         var requests = itemRequestRepository.findAllByRequesterIdNotOrderByIdAsc(requester1.getId(), Pageable.unpaged())
                 .getContent();
-        var firstRequest = requests.stream().findFirst().get();
 
         // Assert
         assertEquals(1, requests.size());
+        assertTrue(requests.stream().findFirst().isPresent());
+
+        var firstRequest = requests.stream().findFirst().get();
         assertThat(firstRequest.getId(), notNullValue());
         assertEquals(itemRequest2.getDescription(), firstRequest.getDescription());
         assertEquals(itemRequest2.getRequester().getId(), firstRequest.getRequester().getId());
