@@ -17,9 +17,11 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 
+import static java.lang.Thread.sleep;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @AutoConfigureTestDatabase
@@ -68,10 +70,12 @@ public class BookingRepositoryTest {
 
         // Act
         var bookings = bookingRepository.findAllByBookerIdOrderByStartDesc(booker.getId(), Pageable.unpaged()).getContent();
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -79,7 +83,7 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllByBookerIdAndStatusOrderByIdAscTest() {
+    public void findAllByBookerIdAndStatusOrderByIdAsc_withValidSearchParams_returnsBookingCollection() {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -116,10 +120,12 @@ public class BookingRepositoryTest {
         var bookings = bookingRepository.findAllByBookerIdAndStatusOrderByIdAsc(booker.getId(),
                 Status.WAITING,
                 Pageable.unpaged()).getContent();
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -127,7 +133,7 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllFutureBookingsByBookerIdOrderByStartDescTest() {
+    public void findAllFutureBookingsByBookerIdOrderByStartDesc_withValidSearchParams_returnsBookingCollection() {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -163,10 +169,12 @@ public class BookingRepositoryTest {
         // Act
         var bookings = bookingRepository.findAllFutureBookingsByBookerIdOrderByStartDesc(booker.getId(),
                 Pageable.unpaged()).getContent();
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -174,7 +182,7 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllPastBookingsByBookerIdOrderByStartDescTest() throws Exception {
+    public void findAllPastBookingsByBookerIdOrderByStartDesc_withValidSearchParams_returnsBookingCollection() throws Exception {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -207,15 +215,17 @@ public class BookingRepositoryTest {
         itemRepository.save(item);
         bookingRepository.save(booking);
 
-        Thread.sleep(3000);
+        sleep(3000);
 
         // Act
         var bookings = bookingRepository.findAllPastBookingsByBookerIdOrderByStartDesc(booker.getId(),
                 Pageable.unpaged()).getContent();
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -223,7 +233,8 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllCurrentBookingsByBookerIdOrderByIdAscTest() throws Exception {
+    public void findAllCurrentBookingsByBookerIdOrderByIdAsc_withValidSearchParams_returnsBookingCollection()
+            throws Exception {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -256,15 +267,17 @@ public class BookingRepositoryTest {
         itemRepository.save(item);
         bookingRepository.save(booking);
 
-        Thread.sleep(2000);
+        sleep(2000);
 
         // Act
         var bookings = bookingRepository.findAllCurrentBookingsByBookerIdOrderByIdAsc(booker.getId(),
                 Pageable.unpaged()).getContent();
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -272,7 +285,7 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllByItemOwnerIdOrderByStartDescTest() {
+    public void findAllByItemOwnerIdOrderByStartDesc_withValidSearchParams_returnsBookingCollection() {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -307,10 +320,12 @@ public class BookingRepositoryTest {
 
         // Act
         var bookings = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(owner.getId(), Pageable.unpaged()).getContent();
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -318,7 +333,7 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllByItemOwnerIdAndStatusOrderByIdAscTest() {
+    public void findAllByItemOwnerIdAndStatusOrderByIdAsc_withValidSearchParams_returnsBookingCollection() {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -355,10 +370,12 @@ public class BookingRepositoryTest {
         var bookings = bookingRepository.findAllByItemOwnerIdAndStatusOrderByIdAsc(owner.getId(),
                 Status.WAITING,
                 Pageable.unpaged()).getContent();
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -366,7 +383,7 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllFutureBookingsByItemOwnerIdOrderByStartDescTest() {
+    public void findAllFutureBookingsByItemOwnerIdOrderByStartDesc_withValidSearchParams_returnsBookingCollection() {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -402,10 +419,12 @@ public class BookingRepositoryTest {
         // Act
         var bookings = bookingRepository.findAllFutureBookingsByItemOwnerIdOrderByStartDesc(owner.getId(),
                 Pageable.unpaged()).getContent();
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -413,7 +432,8 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllPastBookingsByItemOwnerIdOrderByStartDescTest() throws Exception {
+    public void findAllPastBookingsByItemOwnerIdOrderByStartDesc_withValidSearchParams_returnsBookingCollection()
+            throws Exception {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -446,15 +466,17 @@ public class BookingRepositoryTest {
         itemRepository.save(item);
         bookingRepository.save(booking);
 
-        Thread.sleep(3000);
+        sleep(3000);
 
         // Act
         var bookings = bookingRepository.findAllPastBookingsByItemOwnerIdOrderByStartDesc(owner.getId(),
                 Pageable.unpaged()).getContent();
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -462,7 +484,8 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllCurrentBookingsByItemOwnerIdOrderByIdAscTest() throws Exception {
+    public void findAllCurrentBookingsByItemOwnerIdOrderByIdAsc_withValidSearchParams_returnsBookingCollection()
+            throws Exception {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -495,15 +518,17 @@ public class BookingRepositoryTest {
         itemRepository.save(item);
         bookingRepository.save(booking);
 
-        Thread.sleep(2000);
+        sleep(2000);
 
         // Act
         var bookings = bookingRepository.findAllCurrentBookingsByItemOwnerIdOrderByIdAsc(owner.getId(),
                 Pageable.unpaged()).getContent();
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -511,7 +536,8 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllCurrentOrPastBookingsByItemIdOrderByStartAscTest() throws Exception {
+    public void findAllCurrentOrPastBookingsByItemIdOrderByStartAsc_withValidSearchParams_returnsBookingCollection()
+            throws Exception {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -544,14 +570,16 @@ public class BookingRepositoryTest {
         itemRepository.save(item);
         bookingRepository.save(booking);
 
-        Thread.sleep(2000);
+        sleep(2000);
 
         // Act
         var bookings = bookingRepository.findAllCurrentOrPastBookingsByItemIdOrderByStartAsc(item.getId());
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -559,7 +587,7 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllFutureBookingsByItemIdOrderByStartDescTest() {
+    public void findAllFutureBookingsByItemIdOrderByStartDesc_withValidSearchParams_returnsBookingCollection() {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -594,10 +622,12 @@ public class BookingRepositoryTest {
 
         // Act
         var bookings = bookingRepository.findAllFutureBookingsByItemIdOrderByStartDesc(item.getId());
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());
@@ -605,7 +635,8 @@ public class BookingRepositoryTest {
     }
 
     @Test
-    public void findAllPastBookingsByBookerIdAndItemIdOrderByIdAscTest() throws Exception {
+    public void findAllPastBookingsByBookerIdAndItemIdOrderByIdAsc_withValidSearchParams_returnsBookingCollection()
+            throws Exception {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -643,10 +674,12 @@ public class BookingRepositoryTest {
         // Act
         var bookings = bookingRepository.findAllPastBookingsByBookerIdAndItemIdOrderByIdAsc(booker.getId(),
                 item.getId());
-        var firstBooking = bookings.stream().findFirst().get();
 
         // Assert
         assertEquals(1, bookings.size());
+        assertTrue(bookings.stream().findFirst().isPresent());
+
+        var firstBooking = bookings.stream().findFirst().get();
         assertThat(firstBooking.getId(), notNullValue());
         assertEquals(booking.getBooker().getId(), firstBooking.getBooker().getId());
         assertEquals(booking.getItem().getId(), firstBooking.getItem().getId());

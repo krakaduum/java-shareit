@@ -54,7 +54,7 @@ public class BookingsControllerTest {
     MockMvc mvc;
 
     @Test
-    public void addBookingTest() throws Exception {
+    public void addBooking_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -77,7 +77,7 @@ public class BookingsControllerTest {
     }
 
     @Test
-    public void getBookingTest() throws Exception {
+    public void getBooking_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -96,7 +96,7 @@ public class BookingsControllerTest {
     }
 
     @Test
-    public void updateBookingTest() throws Exception {
+    public void updateBooking_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -116,7 +116,7 @@ public class BookingsControllerTest {
     }
 
     @Test
-    public void getBookingsTest() throws Exception {
+    public void getBookings_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -136,7 +136,7 @@ public class BookingsControllerTest {
     }
 
     @Test
-    public void getBookingsByItemOwnerTest() throws Exception {
+    public void getBookingsByItemOwner_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");

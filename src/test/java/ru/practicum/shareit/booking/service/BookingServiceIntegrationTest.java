@@ -33,7 +33,7 @@ public class BookingServiceIntegrationTest {
     private final BookingService bookingService;
 
     @Test
-    public void addBookingTest() {
+    public void addBooking_withValidData_returnsBookingDto() {
         // Arrange
         var bookingRequestBody = new BookingRequestBody(1L,
                 LocalDateTime.now().plusDays(1),
