@@ -17,10 +17,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 @SpringBootTest
 public class UserServiceTest {
+
+    private final UserDto userDto = new UserDto(1L,
+            "User Name",
+            "user.name@mail.com");
+
+    private final User user = new User(1L,
+            "User Name",
+            "user.name@mail.com");
 
     @Mock
     private UserRepository userRepository;
@@ -29,20 +37,13 @@ public class UserServiceTest {
 
     @BeforeEach
     public void setUp() {
-        initMocks(this);
+        openMocks(this);
         userService = new UserServiceImpl(userRepository);
     }
 
     @Test
     public void addUserTest() {
         // Arrange
-        var userDto = makeUserDto(1L,
-                "Foo Bar",
-                "foo.bar@mail.com");
-        var user = makeUser(1L,
-                "Foo Bar",
-                "foo.bar@mail.com");
-
         when(userRepository.save(any()))
                 .thenReturn(user);
 
@@ -58,39 +59,28 @@ public class UserServiceTest {
     @Test
     public void getUserTest() {
         // Arrange
-        var user = makeUser(1L,
-                "Foo Bar",
-                "foo.bar@mail.com");
-
         when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(user));
 
         // Act
-        var userDto = userService.getUser(1);
+        var foundUserDto = userService.getUser(1L);
 
         // Assert
-        assertThat(userDto.getId(), notNullValue());
-        assertEquals(userDto.getName(), userDto.getName());
-        assertEquals(userDto.getEmail(), userDto.getEmail());
+        assertThat(user.getId(), notNullValue());
+        assertEquals(user.getName(), foundUserDto.getName());
+        assertEquals(user.getEmail(), foundUserDto.getEmail());
     }
 
     @Test
     public void updateUserTest() {
         // Arrange
-        var userDto = makeUserDto(1L,
-                "Foo Bar",
-                "foo.bar@mail.com");
-        var user = makeUser(1L,
-                "Foo Bar",
-                "foo.bar@mail.com");
-
         when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(user));
         when(userRepository.save(any()))
                 .thenReturn(user);
 
         // Act
-        var updatedUserDto = userService.updateUser(1, userDto);
+        var updatedUserDto = userService.updateUser(1L, userDto);
 
         // Assert
         assertThat(updatedUserDto.getId(), notNullValue());
@@ -105,7 +95,7 @@ public class UserServiceTest {
                 .thenReturn(true);
 
         // Act
-        userService.removeUser(1);
+        userService.removeUser(1L);
 
         // Assert
         verify(userRepository, times(1))
@@ -117,10 +107,6 @@ public class UserServiceTest {
     @Test
     public void getUsersTest() {
         // Arrange
-        var user = makeUser(1L,
-                "Foo Bar",
-                "foo.bar@mail.com");
-
         when(userRepository.findAll())
                 .thenReturn(List.of(user));
 
@@ -131,16 +117,8 @@ public class UserServiceTest {
         // Assert
         assertEquals(users.size(), 1);
         assertThat(firstUser.get().getId(), notNullValue());
-        assertEquals(firstUser.get().getName(), user.getName());
-        assertEquals(firstUser.get().getEmail(), user.getEmail());
-    }
-
-    private User makeUser(long id, String name, String email) {
-        return new User(id, name, email);
-    }
-
-    private UserDto makeUserDto(long id, String name, String email) {
-        return new UserDto(id, name, email);
+        assertEquals(user.getName(), firstUser.get().getName());
+        assertEquals(user.getEmail(), firstUser.get().getEmail());
     }
 
 }

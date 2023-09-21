@@ -26,8 +26,8 @@ public class UserControllerTest {
 
     private final UserDto userDto = new UserDto(
             1L,
-            "Foo Bar",
-            "foo.bar@mail.com");
+            "User Name",
+            "user.name@mail.com");
 
     @Autowired
     ObjectMapper mapper;

@@ -19,9 +19,9 @@ public class UserServiceIntegrationTest {
     @Test
     public void addUserTest() {
         // Arrange
-        var userDto = makeUserDto(1L,
-                "Foo Bar",
-                "foo.bar@mail.com");
+        var userDto = new UserDto(1L,
+                "User Name",
+                "user.name@mail.com");
 
         // Act
         var addedUserDto = userService.addUser(userDto);
@@ -30,10 +30,6 @@ public class UserServiceIntegrationTest {
         assertThat(addedUserDto.getId(), notNullValue());
         assertEquals(userDto.getName(), addedUserDto.getName());
         assertEquals(userDto.getEmail(), addedUserDto.getEmail());
-    }
-
-    private UserDto makeUserDto(long id, String name, String email) {
-        return new UserDto(id, name, email);
     }
 
 }
