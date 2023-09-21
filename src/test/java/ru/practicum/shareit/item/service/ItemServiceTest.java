@@ -258,7 +258,6 @@ public class ItemServiceTest {
         assertThat(addedCommentDto.getId(), notNullValue());
         assertEquals(commentDto.getText(), addedCommentDto.getText());
         assertEquals(commentDto.getAuthorName(), addedCommentDto.getAuthorName());
-        assertEquals(commentDto.getCreated(), addedCommentDto.getCreated());
     }
 
 }

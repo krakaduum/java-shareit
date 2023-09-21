@@ -37,10 +37,11 @@ public class ItemRepositoryTest {
                 "Item Name",
                 "Item Description",
                 true,
-                owner,
+                null,
                 null);
 
-        userRepository.save(owner);
+        owner = userRepository.save(owner);
+        item.setOwner(owner);
         itemRepository.save(item);
 
         // Act
