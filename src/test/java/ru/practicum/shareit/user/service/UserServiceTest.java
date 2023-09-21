@@ -8,12 +8,14 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import javax.validation.ValidationException;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -21,10 +23,6 @@ import static org.mockito.MockitoAnnotations.openMocks;
 
 @SpringBootTest
 public class UserServiceTest {
-
-    private final UserDto userDto = new UserDto(1L,
-            "User Name",
-            "user.name@mail.com");
 
     private final User user = new User(1L,
             "User Name",
@@ -42,8 +40,12 @@ public class UserServiceTest {
     }
 
     @Test
-    public void addUserTest() {
+    public void addUser_withValidUserDto_returnsUserDto() throws ValidationException {
         // Arrange
+        var userDto = new UserDto(1L,
+                "User Name",
+                "user.name@mail.com");
+
         when(userRepository.save(any()))
                 .thenReturn(user);
 
@@ -57,7 +59,29 @@ public class UserServiceTest {
     }
 
     @Test
-    public void getUserTest() {
+    public void addUser_withEmptyName_throwsValidationException() throws ValidationException {
+        // Arrange
+        var userDto = new UserDto(1L,
+                "",
+                "user.name@mail.com");
+
+        // Act & Assert
+        assertThrows(ValidationException.class, () -> userService.addUser(userDto));
+    }
+
+    @Test
+    public void addUser_withEmptyEmail_throwsValidationException() throws ValidationException {
+        // Arrange
+        var userDto = new UserDto(1L,
+                "User Name",
+                "");
+
+        // Act & Assert
+        assertThrows(ValidationException.class, () -> userService.addUser(userDto));
+    }
+
+    @Test
+    public void getUser_withValidUserId_returnsUserDto() throws NoSuchElementException {
         // Arrange
         when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(user));
@@ -72,8 +96,19 @@ public class UserServiceTest {
     }
 
     @Test
-    public void updateUserTest() {
+    public void getUser_withInvalidUserId_throwsNoSuchElementException() throws NoSuchElementException {
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> userService.getUser(1L));
+    }
+
+    @Test
+    public void updateUser_withValidUserDtoAndValidUserId_returnsUserDto()
+            throws NoSuchElementException, ValidationException {
         // Arrange
+        var userDto = new UserDto(1L,
+                "User Name",
+                "user.name@mail.com");
+
         when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(user));
         when(userRepository.save(any()))
@@ -89,7 +124,18 @@ public class UserServiceTest {
     }
 
     @Test
-    public void removeUserTest() {
+    public void updateUser_withInvalidUserId_throwsNoSuchElementException() throws NoSuchElementException {
+        // Arrange
+        var userDto = new UserDto(1L,
+                "User Name",
+                "user.name@mail.com");
+
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> userService.updateUser(1L, userDto));
+    }
+
+    @Test
+    public void removeUser_withValidUserId_callsUserRepositoryTwice() throws NoSuchElementException {
         // Arrange
         when(userRepository.existsById(anyLong()))
                 .thenReturn(true);
@@ -105,7 +151,13 @@ public class UserServiceTest {
     }
 
     @Test
-    public void getUsersTest() {
+    public void removeUser_withInvalidUserId_throwsNoSuchElementException() throws NoSuchElementException {
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> userService.removeUser(1L));
+    }
+
+    @Test
+    public void getUsers_returnsUsersCollection() {
         // Arrange
         when(userRepository.findAll())
                 .thenReturn(List.of(user));
@@ -116,6 +168,7 @@ public class UserServiceTest {
 
         // Assert
         assertEquals(users.size(), 1);
+        assertTrue(firstUser.isPresent());
         assertThat(firstUser.get().getId(), notNullValue());
         assertEquals(user.getName(), firstUser.get().getName());
         assertEquals(user.getEmail(), firstUser.get().getEmail());

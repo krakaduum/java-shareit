@@ -37,7 +37,7 @@ public class UserControllerTest {
     MockMvc mvc;
 
     @Test
-    public void addUserTest() throws Exception {
+    public void addUser_withValidUserDto_returnsOk() throws Exception {
         // Arrange
         when(userService.addUser(any()))
                 .thenReturn(userDto);
@@ -55,7 +55,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void getUserTest() throws Exception {
+    public void getUser_withValidUserId_returnsOk() throws Exception {
         // Arrange
         when(userService.getUser(anyLong()))
                 .thenReturn(userDto);
@@ -69,7 +69,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void updateUserTest() throws Exception {
+    public void updateUser_withValidUserDtoAndUserId_returnsOk() throws Exception {
         // Arrange
         when(userService.updateUser(anyLong(), any()))
                 .thenReturn(userDto);
@@ -87,14 +87,14 @@ public class UserControllerTest {
     }
 
     @Test
-    public void removeUserTest() throws Exception {
+    public void removeUser_withValidUserId_returnsOk() throws Exception {
         // Act & Assert
         mvc.perform(delete("/users/1"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    public void getUsersTest() throws Exception {
+    public void getUsers_returnsOk() throws Exception {
         // Arrange
         when(userService.getUsers())
                 .thenReturn(List.of(userDto));
