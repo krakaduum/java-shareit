@@ -6,29 +6,30 @@ import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageImpl;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
+import ru.practicum.shareit.booking.exception.AccessDeniedException;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CommentRequestBody;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemExtendedDto;
+import ru.practicum.shareit.item.exception.InvalidAuthorException;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import javax.validation.ValidationException;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -36,56 +37,6 @@ import static org.mockito.MockitoAnnotations.openMocks;
 
 @SpringBootTest
 public class ItemServiceTest {
-
-    private final Item item = new Item(
-            1L,
-            "Item Name",
-            "Item Description",
-            true,
-            new User(1L, "User Name", "user.name@mail.com"),
-            null);
-
-    private final ItemDto itemDto = new ItemDto(
-            1L,
-            "Item Name",
-            "Item Description",
-            true,
-            1L,
-            null);
-
-    private final ItemExtendedDto itemExtendedDto = new ItemExtendedDto(
-            1L,
-            "Item Name",
-            "Item Description",
-            true,
-            1L,
-            new BookingShortDto(2L, 2L),
-            new BookingShortDto(3L, 3L),
-            List.of(new CommentDto(1L, "Comment", "Author Name", LocalDateTime.now())));
-
-    private final Comment comment = new Comment(2L,
-            "Text",
-            null,
-            new User(2L,
-                    "Author Name",
-                    "author.name@mail.com"),
-            LocalDateTime.now());
-
-    private final CommentRequestBody commentRequestBody = new CommentRequestBody("Text");
-
-    private final CommentDto commentDto = new CommentDto(
-            1L,
-            "Text",
-            "Author Name",
-            LocalDateTime.now());
-
-    private final User owner = new User(1L,
-            "Owner Name",
-            "owner.name@mail.com");
-
-    private final User author = new User(2L,
-            "Author Name",
-            "author.name@mail.com");
 
     @Mock
     private ItemRepository itemRepository;
@@ -112,8 +63,23 @@ public class ItemServiceTest {
     }
 
     @Test
-    public void addItemTest() {
+    public void addItem_withValidData_returnsItemDto() throws ValidationException, NoSuchElementException {
         // Arrange
+        var owner = new User(1L, "Owner Name", "owner.name@mail.com");
+        var item = new Item(1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+        var itemDto = new ItemDto(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                1L,
+                null);
+
         when(userRepository.findById(any()))
                 .thenReturn(Optional.of(owner));
         when(itemRepository.save(any()))
@@ -132,8 +98,130 @@ public class ItemServiceTest {
     }
 
     @Test
-    public void getItemTest() {
+    public void addItem_withValidDataWithRequestId_returnsItemDtoWithRequest()
+            throws ValidationException, NoSuchElementException {
         // Arrange
+        var owner = new User(1L, "Owner Name", "owner.name@mail.com");
+        var requester = new User(2L, "Requester Name", "requester.name@mail.com");
+        var item = new Item(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+        var itemRequest = new ItemRequest(1L, "Description", requester, LocalDateTime.now(), Set.of(item));
+        item.setRequest(itemRequest);
+        var itemDto = new ItemDto(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                1L,
+                1L);
+
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(owner));
+        when(itemRequestRepository.findById(any()))
+                .thenReturn(Optional.of(itemRequest));
+        when(itemRepository.save(any()))
+                .thenReturn(item);
+
+        // Act
+        var addedItemDto = itemService.addItem(1L, itemDto);
+
+        // Assert
+        assertThat(addedItemDto.getId(), notNullValue());
+        assertEquals(itemDto.getName(), addedItemDto.getName());
+        assertEquals(itemDto.getDescription(), addedItemDto.getDescription());
+        assertEquals(itemDto.getAvailable(), addedItemDto.getAvailable());
+        assertEquals(itemDto.getOwnerId(), addedItemDto.getOwnerId());
+        assertEquals(itemDto.getRequestId(), addedItemDto.getRequestId());
+    }
+
+    @Test
+    public void addItem_withEmptyName_throwsValidationException() throws ValidationException {
+        // Arrange
+        var itemDto = new ItemDto(
+                1L,
+                "",
+                "Item Description",
+                true,
+                1L,
+                null);
+
+        // Act & Assert
+        assertThrows(ValidationException.class, () -> itemService.addItem(1L, itemDto));
+    }
+
+    @Test
+    public void addItem_withEmptyDescription_throwsValidationException() throws ValidationException {
+        // Arrange
+        var itemDto = new ItemDto(
+                1L,
+                "Item Name",
+                "",
+                true,
+                1L,
+                null);
+
+        // Act & Assert
+        assertThrows(ValidationException.class, () -> itemService.addItem(1L, itemDto));
+    }
+
+    @Test
+    public void addItem_withEmptyAvailable_throwsValidationException() throws ValidationException {
+        // Arrange
+        var itemDto = new ItemDto(
+                1L,
+                "Item Name",
+                "Item Description",
+                null,
+                1L,
+                null);
+
+        // Act & Assert
+        assertThrows(ValidationException.class, () -> itemService.addItem(1L, itemDto));
+    }
+
+    @Test
+    public void addItem_withInvalidOwnerId_throwsNoSuchElementException() throws NoSuchElementException {
+        // Arrange
+        var itemDto = new ItemDto(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                1L,
+                null);
+
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> itemService.addItem(1L, itemDto));
+    }
+
+    @Test
+    public void getItem_withValidData_returnsItemDto() throws NoSuchElementException {
+        // Arrange
+        var owner = new User(1L,
+                "Owner Name",
+                "owner.name@mail.com");
+        var item = new Item(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+        var itemExtendedDto = new ItemExtendedDto(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                1L,
+                new BookingShortDto(2L, 2L),
+                new BookingShortDto(3L, 3L),
+                List.of(new CommentDto(1L, "Comment", "Author Name", LocalDateTime.now())));
+
         when(userRepository.findById(any()))
                 .thenReturn(Optional.of(owner));
         when(itemRepository.findById(anyLong()))
@@ -160,12 +248,36 @@ public class ItemServiceTest {
     }
 
     @Test
-    public void updateItemTest() {
+    public void getItem_withInvalidItemId_throwsNoSuchElementException() throws NoSuchElementException {
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> itemService.getItem(1L, 1L));
+    }
+
+    @Test
+    public void updateItem_withValidData_returnsItemDto() throws NoSuchElementException, ValidationException {
         // Arrange
-        when(userRepository.findById(any()))
-                .thenReturn(Optional.of(owner));
+        var owner = new User(1L,
+                "Owner Name",
+                "owner.name@mail.com");
+        var item = new Item(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+        var itemDto = new ItemDto(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                1L,
+                null);
+
         when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.of(item));
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(owner));
         when(itemRepository.save(any()))
                 .thenReturn(item);
 
@@ -182,8 +294,70 @@ public class ItemServiceTest {
     }
 
     @Test
-    public void removeItemTest() {
+    public void updateItem_withInvalidItemId_throwsNoSuchElementException() throws NoSuchElementException {
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> itemService.updateItem(1L, 1L, null));
+    }
+
+    @Test
+    public void updateItem_withoutOwnerInDatabase_throwsNoSuchElementException() throws NoSuchElementException {
         // Arrange
+        var owner = new User(1L,
+                "Owner Name",
+                "owner.name@mail.com");
+        var item = new Item(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.of(item));
+
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> itemService.updateItem(2L, 1L, null));
+    }
+
+    @Test
+    public void updateItem_withInvalidOwnerId_throwsNoSuchElementException() throws NoSuchElementException {
+        // Arrange
+        var owner = new User(1L,
+                "Owner Name",
+                "owner.name@mail.com");
+        var owner2 = new User(2L,
+                "Owner2 Name",
+                "owner2.name@mail.com");
+        var item = new Item(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner2,
+                null);
+
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.of(item));
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(owner));
+
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> itemService.updateItem(1L, 1L, null));
+    }
+
+    @Test
+    public void removeItem_withValidData_callsItemRepositoryTwice()
+            throws NoSuchElementException, AccessDeniedException {
+        // Arrange
+        var owner = new User(1L, "Owner Name", "owner.name@mail.com");
+        var item = new Item(1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+
         when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.of(item));
 
@@ -198,10 +372,54 @@ public class ItemServiceTest {
     }
 
     @Test
-    public void getItemsByOwnerIdTest() {
+    public void removeItem_withInvalidItemId_throwsNoSuchElementException() throws NoSuchElementException {
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> itemService.removeItem(1L, 1L));
+    }
+
+    @Test
+    public void removeItem_withInvalidOwnerId_throwsAccessDeniedException() throws AccessDeniedException {
         // Arrange
+        var owner = new User(1L, "Owner Name", "owner.name@mail.com");
+        var item = new Item(1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.of(item));
+
+        // Act & Assert
+        assertThrows(AccessDeniedException.class, () -> itemService.removeItem(2L, 1L));
+    }
+
+    @Test
+    public void getItemsByOwnerId_withValidData_returnsItemCollection() throws IllegalArgumentException {
+        // Arrange
+        var owner = new User(1L,
+                "Owner Name",
+                "owner.name@mail.com");
+        var item = new Item(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+        var itemExtendedDto = new ItemExtendedDto(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                1L,
+                new BookingShortDto(2L, 2L),
+                new BookingShortDto(3L, 3L),
+                List.of(new CommentDto(1L, "Comment", "Author Name", LocalDateTime.now())));
+
         when(itemRepository.findAllByOwnerIdOrderByIdAsc(anyLong(), any()))
-                .thenReturn(new PageImpl(List.of(item)));
+                .thenReturn(new PageImpl<>(List.of(item)));
 
         // Act
         var items = itemService.getItemsByOwnerId(1L, null, null);
@@ -209,6 +427,7 @@ public class ItemServiceTest {
 
         // Assert
         assertEquals(items.size(), 1);
+        assertTrue(firstItem.isPresent());
         assertThat(firstItem.get().getId(), notNullValue());
         assertEquals(itemExtendedDto.getName(), firstItem.get().getName());
         assertEquals(itemExtendedDto.getDescription(), firstItem.get().getDescription());
@@ -220,10 +439,35 @@ public class ItemServiceTest {
     }
 
     @Test
-    public void searchItemsTest() {
+    public void getItemsByOwnerId_withInvalidSearchParams_throwsIllegalArgumentException()
+            throws IllegalArgumentException {
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> itemService.getItemsByOwnerId(1L, -1, -1));
+    }
+
+    @Test
+    public void searchItems_withValidData_returnsItemCollection() throws IllegalArgumentException {
         // Arrange
+        var owner = new User(1L,
+                "Owner Name",
+                "owner.name@mail.com");
+        var item = new Item(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+        var itemDto = new ItemDto(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                1L,
+                null);
+
         when(itemRepository.findAllAvailableItemsByNameOrDescription(anyString(), any()))
-                .thenReturn(new PageImpl(List.of(item)));
+                .thenReturn(new PageImpl<>(List.of(item)));
 
         // Act
         var items = itemService.searchItems("query", null, null);
@@ -231,6 +475,7 @@ public class ItemServiceTest {
 
         // Assert
         assertEquals(1, items.size());
+        assertTrue(firstItem.isPresent());
         assertThat(firstItem.get().getId(), notNullValue());
         assertEquals(itemDto.getName(), firstItem.get().getName());
         assertEquals(itemDto.getDescription(), firstItem.get().getDescription());
@@ -240,8 +485,36 @@ public class ItemServiceTest {
     }
 
     @Test
-    public void addCommentTest() {
+    public void searchItems_withInvalidSearchParams_throwsIllegalArgumentException()
+            throws IllegalArgumentException {
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> itemService.searchItems("query", -1, -1));
+    }
+
+    @Test
+    public void addComment_withValidData_returnsCommentDto()
+            throws NoSuchElementException, InvalidAuthorException, ValidationException {
         // Arrange
+        var owner = new User(1L,
+                "Owner Name",
+                "owner.name@mail.com");
+        var author = new User(2L,
+                "Author Name",
+                "author.name@mail.com");
+        var item = new Item(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+        var commentRequestBody = new CommentRequestBody("Text");
+        var comment = new Comment(2L,
+                "Text",
+                item,
+                author,
+                LocalDateTime.now());
+
         when(userRepository.findById(any()))
                 .thenReturn(Optional.of(author));
         when(itemRepository.findById(any()))
@@ -256,8 +529,88 @@ public class ItemServiceTest {
 
         // Assert
         assertThat(addedCommentDto.getId(), notNullValue());
-        assertEquals(commentDto.getText(), addedCommentDto.getText());
-        assertEquals(commentDto.getAuthorName(), addedCommentDto.getAuthorName());
+        assertEquals(comment.getText(), addedCommentDto.getText());
+        assertEquals(comment.getAuthor().getName(), addedCommentDto.getAuthorName());
+    }
+
+    @Test
+    public void addComment_withInvalidAuthorId_throwsNoSuchElementException() throws NoSuchElementException {
+        // Arrange
+        var commentRequestBody = new CommentRequestBody("Text");
+
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> itemService.addComment(1L, 1L, commentRequestBody));
+    }
+
+    @Test
+    public void addComment_withInvalidItemId_throwsNoSuchElementException() throws NoSuchElementException {
+        // Arrange
+        var author = new User(2L,
+                "Author Name",
+                "author.name@mail.com");
+        var commentRequestBody = new CommentRequestBody("Text");
+
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(author));
+
+        // Act & Assert
+        assertThrows(NoSuchElementException.class, () -> itemService.addComment(1L, 1L, commentRequestBody));
+    }
+
+    @Test
+    public void addComment_withValidAuthorWithoutBookings_throwsInvalidAuthorException() throws InvalidAuthorException {
+        // Arrange
+        var owner = new User(1L,
+                "Owner Name",
+                "owner.name@mail.com");
+        var author = new User(2L,
+                "Author Name",
+                "author.name@mail.com");
+        var item = new Item(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+        var commentRequestBody = new CommentRequestBody("Text");
+
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(author));
+        when(itemRepository.findById(any()))
+                .thenReturn(Optional.of(item));
+
+        // Act & Assert
+        assertThrows(InvalidAuthorException.class, () -> itemService.addComment(1L, 1L, commentRequestBody));
+    }
+
+    @Test
+    public void addComment_withInvalidText_throwsValidationException() throws ValidationException {
+        // Arrange
+        var owner = new User(1L,
+                "Owner Name",
+                "owner.name@mail.com");
+        var author = new User(2L,
+                "Author Name",
+                "author.name@mail.com");
+        var item = new Item(
+                1L,
+                "Item Name",
+                "Item Description",
+                true,
+                owner,
+                null);
+        var commentRequestBody = new CommentRequestBody("");
+
+        when(userRepository.findById(any()))
+                .thenReturn(Optional.of(author));
+        when(itemRepository.findById(any()))
+                .thenReturn(Optional.of(item));
+        when(bookingRepository.findAllPastBookingsByBookerIdAndItemIdOrderByIdAsc(anyLong(), anyLong()))
+                .thenReturn(List.of(new Booking()));
+
+        // Act & Assert
+        assertThrows(ValidationException.class, () -> itemService.addComment(1L, 1L, commentRequestBody));
     }
 
 }

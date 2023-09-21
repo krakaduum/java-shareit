@@ -15,6 +15,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @AutoConfigureTestDatabase
@@ -27,7 +28,7 @@ public class ItemRepositoryTest {
     private final UserRepository userRepository;
 
     @Test
-    public void findAllByOwnerIdOrderByIdAscTest() {
+    public void findAllByOwnerIdOrderByIdAsc_withValidSearchParams_returnsItemCollection() {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -46,10 +47,13 @@ public class ItemRepositoryTest {
 
         // Act
         var items = itemRepository.findAllByOwnerIdOrderByIdAsc(owner.getId(), Pageable.unpaged()).getContent();
-        var firstItem = items.stream().findFirst().get();
+
 
         // Assert
         assertEquals(1, items.size());
+        assertTrue(items.stream().findFirst().isPresent());
+
+        var firstItem = items.stream().findFirst().get();
         assertThat(firstItem.getId(), notNullValue());
         assertEquals(item.getName(), firstItem.getName());
         assertEquals(item.getDescription(), firstItem.getDescription());
@@ -58,7 +62,7 @@ public class ItemRepositoryTest {
     }
 
     @Test
-    public void findAllAvailableItemsByNameOrDescriptionTest() {
+    public void findAllAvailableItemsByNameOrDescription_withValidSearchParams_returnsItemCollection() {
         // Arrange
         var owner = new User(1L,
                 "Owner Name",
@@ -76,10 +80,12 @@ public class ItemRepositoryTest {
 
         // Act
         var items = itemRepository.findAllAvailableItemsByNameOrDescription("Item Name", Pageable.unpaged()).getContent();
-        var firstItem = items.stream().findFirst().get();
 
         // Assert
         assertEquals(1, items.size());
+        assertTrue(items.stream().findFirst().isPresent());
+
+        var firstItem = items.stream().findFirst().get();
         assertThat(firstItem.getId(), notNullValue());
         assertEquals(item.getName(), firstItem.getName());
         assertEquals(item.getDescription(), firstItem.getDescription());

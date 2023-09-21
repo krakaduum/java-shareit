@@ -26,7 +26,7 @@ public class ItemServiceIntegrationTest {
     private final ItemService itemService;
 
     @Test
-    public void addItemTest() {
+    public void addItem_withValidData_returnsItemDto() {
         // Arrange
         var userDto = new UserDto(1L,
                 "User Name",

@@ -63,7 +63,7 @@ public class ItemControllerTest {
     MockMvc mvc;
 
     @Test
-    public void addItemTest() throws Exception {
+    public void addItem_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -88,7 +88,7 @@ public class ItemControllerTest {
     }
 
     @Test
-    public void getItemTest() throws Exception {
+    public void getItem_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -112,7 +112,7 @@ public class ItemControllerTest {
     }
 
     @Test
-    public void updateItemTest() throws Exception {
+    public void updateItem_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -137,7 +137,7 @@ public class ItemControllerTest {
     }
 
     @Test
-    public void removeItemTest() throws Exception {
+    public void removeItem_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -152,7 +152,7 @@ public class ItemControllerTest {
     }
 
     @Test
-    public void getItemsByOwnerIdTest() throws Exception {
+    public void getItemsByOwnerId_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
@@ -176,7 +176,7 @@ public class ItemControllerTest {
     }
 
     @Test
-    public void searchItemsTest() throws Exception {
+    public void searchItems_withValidData_returnsOk() throws Exception {
         // Arrange
         when(itemService.searchItems(anyString(), any(), any()))
                 .thenReturn(List.of(itemDto));
@@ -194,7 +194,7 @@ public class ItemControllerTest {
     }
 
     @Test
-    public void addCommentTest() throws Exception {
+    public void addComment_withValidData_returnsOk() throws Exception {
         // Arrange
         var headers = new HttpHeaders();
         headers.set("X-Sharer-User-Id", "1");
