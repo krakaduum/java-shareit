@@ -8,7 +8,6 @@ import ru.practicum.shareit.request.service.ItemRequestService;
 
 import java.util.Collection;
 
-
 @RestController
 @RequestMapping(path = "/requests")
 public class ItemRequestController {
