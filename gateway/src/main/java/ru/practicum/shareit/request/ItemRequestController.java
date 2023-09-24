@@ -13,7 +13,7 @@ import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 
 @Controller
-@RequestMapping(path = "/bookings")
+@RequestMapping(path = "/requests")
 @RequiredArgsConstructor
 @Slf4j
 @Validated
@@ -30,12 +30,12 @@ public class ItemRequestController {
 
     @GetMapping("/{requestId}")
     public ResponseEntity<Object> getItemRequest(@RequestHeader("X-Sharer-User-Id") long userId,
-                                                 @PathVariable long itemRequestId) {
+                                                 @PathVariable Long itemRequestId) {
         log.info("Get item request {}, userId={}", itemRequestId, userId);
         return itemRequestClient.getItemRequest(userId, itemRequestId);
     }
 
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<Object> getItemRequestsByRequesterId(@RequestHeader("X-Sharer-User-Id") long userId) {
         log.info("Get item requests by requester, userId={}", userId);
         return itemRequestClient.getItemRequestsByRequesterId(userId);

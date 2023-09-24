@@ -10,12 +10,11 @@ import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 
 @Controller
-@RequestMapping(path = "/bookings")
+@RequestMapping(path = "/items")
 @RequiredArgsConstructor
 @Slf4j
 @Validated
@@ -40,7 +39,7 @@ public class ItemController {
     @PatchMapping("/{itemId}")
     public ResponseEntity<Object> updateItem(@RequestHeader("X-Sharer-User-Id") long userId,
                                              @PathVariable long itemId,
-                                             @Valid @RequestBody ItemDto itemDto) {
+                                             @RequestBody ItemDto itemDto) {
         log.info("Update item {}, itemId={}, userId={}", itemDto, itemId, userId);
         return itemClient.updateItem(userId, itemId, itemDto);
     }
@@ -62,7 +61,7 @@ public class ItemController {
 
     @GetMapping("/search")
     public ResponseEntity<Object> searchItems(@RequestHeader("X-Sharer-User-Id") long userId,
-                                              @NotBlank @RequestParam(name = "text") String text,
+                                              @RequestParam(name = "text") String text,
                                               @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                               @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
         log.info("Search items, text={}, from={}, size={}, userId={}", text, from, size, userId);
