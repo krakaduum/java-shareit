@@ -6,16 +6,12 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 
 @AllArgsConstructor
 @Getter
 @NoArgsConstructor
 public class ItemDto {
-
-    @Positive
-    Long id;
 
     @NotBlank
     @Size(max = 255)
@@ -27,8 +23,6 @@ public class ItemDto {
 
     @NotNull
     Boolean available;
-
-    Long ownerId;
 
     Long requestId;
 

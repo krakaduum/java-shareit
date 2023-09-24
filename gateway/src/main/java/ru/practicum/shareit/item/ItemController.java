@@ -30,14 +30,14 @@ public class ItemController {
         return itemClient.addItem(userId, itemDto);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{itemId}")
     public ResponseEntity<Object> getItem(@RequestHeader("X-Sharer-User-Id") long userId,
                                           @PathVariable long itemId) {
         log.info("Get item {}, userId={}", itemId, userId);
         return itemClient.getItem(userId, itemId);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{itemId}")
     public ResponseEntity<Object> updateItem(@RequestHeader("X-Sharer-User-Id") long userId,
                                              @PathVariable long itemId,
                                              @Valid @RequestBody ItemDto itemDto) {
@@ -45,7 +45,7 @@ public class ItemController {
         return itemClient.updateItem(userId, itemId, itemDto);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{itemId}")
     public void removeItem(@RequestHeader("X-Sharer-User-Id") long userId,
                            @PathVariable long itemId) {
         log.info("Remove item {}, userId={}", itemId, userId);

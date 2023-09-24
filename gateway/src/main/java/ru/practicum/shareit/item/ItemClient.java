@@ -28,23 +28,23 @@ public class ItemClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> addItem(Long userId, ItemDto itemDto) {
+    public ResponseEntity<Object> addItem(long userId, ItemDto itemDto) {
         return post("", userId, itemDto);
     }
 
-    public ResponseEntity<Object> getItem(Long userId, Long itemId) {
+    public ResponseEntity<Object> getItem(long userId, long itemId) {
         return get("/" + itemId, userId);
     }
 
-    public ResponseEntity<Object> updateItem(Long userId, Long itemId, ItemDto itemDto) {
+    public ResponseEntity<Object> updateItem(long userId, long itemId, ItemDto itemDto) {
         return patch("/" + itemId, userId, itemDto);
     }
 
-    public void removeItem(Long userId, Long itemId) {
+    public void removeItem(long userId, long itemId) {
         delete("/" + itemId, userId);
     }
 
-    public ResponseEntity<Object> getItemsByOwnerId(Long userId, Integer from, Integer size) {
+    public ResponseEntity<Object> getItemsByOwnerId(long userId, Integer from, Integer size) {
         Map<String, Object> parameters = Map.of(
                 "from", from,
                 "size", size
@@ -52,7 +52,7 @@ public class ItemClient extends BaseClient {
         return get("?from={from}&size={size}", userId, parameters);
     }
 
-    public ResponseEntity<Object> searchItems(Long userId, String text, Integer from, Integer size) {
+    public ResponseEntity<Object> searchItems(long userId, String text, Integer from, Integer size) {
         Map<String, Object> parameters = Map.of(
                 "text", text,
                 "from", from,
@@ -61,7 +61,7 @@ public class ItemClient extends BaseClient {
         return get("?text={text}&from={from}&size={size}", userId, parameters);
     }
 
-    public ResponseEntity<Object> addComment(Long authorId, Long itemId, CommentDto commentDto) {
+    public ResponseEntity<Object> addComment(long authorId, long itemId, CommentDto commentDto) {
         return post("/" + itemId + "/comment", authorId, commentDto);
     }
 

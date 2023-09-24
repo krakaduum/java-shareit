@@ -25,22 +25,22 @@ public class UserController {
         return userClient.addUser(userDto);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Object> getUser(@PathVariable long id) {
-        log.info("Get user {}", id);
-        return userClient.getUser(id);
+    @GetMapping("/{userId}")
+    public ResponseEntity<Object> getUser(@PathVariable long userId) {
+        log.info("Get user {}", userId);
+        return userClient.getUser(userId);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<Object> updateUser(@PathVariable long id, @Valid @RequestBody UserDto userDto) {
-        log.info("Update user {}, userId={}", userDto, id);
-        return userClient.updateUser(id, userDto);
+    @PatchMapping("/{userId}")
+    public ResponseEntity<Object> updateUser(@PathVariable long userId, @Valid @RequestBody UserDto userDto) {
+        log.info("Update user {}, userId={}", userDto, userId);
+        return userClient.updateUser(userId, userDto);
     }
 
-    @DeleteMapping("/{id}")
-    public void removeUser(@PathVariable long id) {
-        log.info("Remove user {}", id);
-        userClient.removeUser(id);
+    @DeleteMapping("/{userId}")
+    public void removeUser(@PathVariable long userId) {
+        log.info("Remove user {}", userId);
+        userClient.removeUser(userId);
     }
 
     @GetMapping
