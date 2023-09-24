@@ -22,8 +22,8 @@ public class ItemController {
     }
 
     @PostMapping
-    public ItemDto addItem(@RequestHeader(value = "X-Sharer-User-Id") long userId, @RequestBody ItemDto itemDto) {
-        return itemService.addItem(userId, itemDto);
+    public ItemDto addItem(@RequestHeader(value = "X-Sharer-User-Id") long ownerId, @RequestBody ItemDto itemDto) {
+        return itemService.addItem(ownerId, itemDto);
     }
 
     @GetMapping("/{itemId}")
@@ -33,33 +33,37 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto updateItem(@RequestHeader(value = "X-Sharer-User-Id") long userId,
+    public ItemDto updateItem(@RequestHeader(value = "X-Sharer-User-Id") long ownerId,
                               @PathVariable long itemId,
                               @RequestBody ItemDto itemDto) {
-        return itemService.updateItem(userId, itemId, itemDto);
+        return itemService.updateItem(ownerId, itemId, itemDto);
     }
 
     @DeleteMapping("/{itemId}")
-    public void removeItem(@RequestHeader(value = "X-Sharer-User-Id") long userId,
+    public void removeItem(@RequestHeader(value = "X-Sharer-User-Id") long ownerId,
                            @PathVariable long itemId) {
-        itemService.removeItem(userId, itemId);
+        itemService.removeItem(ownerId, itemId);
     }
 
     @GetMapping
-    public Collection<ItemExtendedDto> getItems(@RequestHeader(value = "X-Sharer-User-Id") long userId) {
-        return itemService.getItemsByOwnerId(userId);
+    public Collection<ItemExtendedDto> getItemsByOwnerId(@RequestHeader(value = "X-Sharer-User-Id") long ownerId,
+                                                         @RequestParam(required = false) Integer from,
+                                                         @RequestParam(required = false) Integer size) {
+        return itemService.getItemsByOwnerId(ownerId, from, size);
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> searchItems(@RequestParam String text) {
-        return itemService.searchItems(text);
+    public Collection<ItemDto> searchItems(@RequestParam String text,
+                                           @RequestParam(required = false) Integer from,
+                                           @RequestParam(required = false) Integer size) {
+        return itemService.searchItems(text, from, size);
     }
 
     @PostMapping("/{itemId}/comment")
-    public CommentDto addComment(@RequestHeader(value = "X-Sharer-User-Id") long userId,
+    public CommentDto addComment(@RequestHeader(value = "X-Sharer-User-Id") long authorId,
                                  @PathVariable long itemId,
                                  @RequestBody CommentRequestBody commentRequestBody) {
-        return itemService.addComment(userId, itemId, commentRequestBody);
+        return itemService.addComment(authorId, itemId, commentRequestBody);
     }
 
 }

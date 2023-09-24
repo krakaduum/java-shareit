@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.service;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.exception.AccessDeniedException;
@@ -17,6 +18,8 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -32,16 +35,19 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository itemRequestRepository;
     private final Validator validator;
 
     public ItemServiceImpl(ItemRepository itemRepository,
                            UserRepository userRepository,
                            BookingRepository bookingRepository,
-                           CommentRepository commentRepository) {
+                           CommentRepository commentRepository,
+                           ItemRequestRepository itemRequestRepository) {
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
         this.commentRepository = commentRepository;
+        this.itemRequestRepository = itemRequestRepository;
 
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         this.validator = factory.getValidator();
@@ -64,6 +70,16 @@ public class ItemServiceImpl implements ItemService {
         }
 
         item.setOwner(owner.get());
+
+        Long requestId = itemDto.getRequestId();
+
+        if (requestId != null) {
+            Optional<ItemRequest> itemRequest = itemRequestRepository.findById(requestId);
+
+            if (!itemRequest.isEmpty()) {
+                item.setRequest(itemRequest.get());
+            }
+        }
 
         item = itemRepository.save(item);
         return ItemMapper.toItemDto(item);
@@ -144,10 +160,23 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemExtendedDto> getItemsByOwnerId(long ownerId) {
+    public Collection<ItemExtendedDto> getItemsByOwnerId(long ownerId, Integer from, Integer size) {
+        if ((from != null && from < 0) || (size != null && size <= 0)) {
+            throw new IllegalArgumentException("Неверные параметры поиска");
+        }
+
+        if (from == null) {
+            from = 0;
+        }
+
+        if (size == null) {
+            size = Integer.MAX_VALUE;
+        }
+
         return itemRepository
-                .findAllByOwnerIdOrderByIdAsc(ownerId)
+                .findAllByOwnerIdOrderByIdAsc(ownerId, Pageable.ofSize(from + size))
                 .stream()
+                .skip(from)
                 .map(item -> ItemMapper.toItemExtendedDto(item,
                         getLastBooking(item),
                         getNextBooking(item),
@@ -156,14 +185,27 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemDto> searchItems(String query) {
+    public Collection<ItemDto> searchItems(String query, Integer from, Integer size) {
         if (query.isEmpty() || query.isBlank()) {
             return new ArrayList<>();
         }
 
+        if ((from != null && from < 0) || (size != null && size <= 0)) {
+            throw new IllegalArgumentException("Неверные параметры поиска");
+        }
+
+        if (from == null) {
+            from = 0;
+        }
+
+        if (size == null) {
+            size = Integer.MAX_VALUE;
+        }
+
         return itemRepository
-                .findAllAvailableItemsByNameOrDescription(query)
+                .findAllAvailableItemsByNameOrDescription(query, Pageable.ofSize(from + size))
                 .stream()
+                .skip(from)
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
